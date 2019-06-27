@@ -1,23 +1,9 @@
-// import React from 'react';
-// import {View, Text} from 'react-native';
-
-// export default function CameraScreen() {
-//   return (
-//     <View>
-//       <Text>
-//         This is the camera screen, see './screens/CameraScreen.js'
-//       </Text>
-//     </View>
-//   )
-// }
-
 import React from 'react';
 import { Text, View, TouchableOpacity, StyleSheet, Button, Image } from 'react-native';
 import * as Permissions from 'expo-permissions';
 import { Camera } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import shorthash from 'shorthash';
-import { FileSystem } from 'expo';
+import { FileSystem, ImagePicker } from 'expo';
 
 export default class CameraScreen extends React.Component {
   state = {
@@ -39,14 +25,26 @@ export default class CameraScreen extends React.Component {
     } else if (hasCameraPermission === false) {
       return <Text>No access to camera</Text>;
     } else if (imgSource !== null) {
-      let pic = {
-        uri: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Cucumber_BNC.jpg'
-      };
       return (
-        <Image 
-          style={styles.capturedImage} 
-          source={imgSource}
-          />
+        <View style={{ flex: 1 }}>
+          <Image style={styles.capturedImage} source={imgSource}/>
+          <View style={styles.buttonBar}>
+            <View>
+              <Ionicons 
+                name='md-arrow-back' 
+                size={30} 
+                onPress = {() => {
+                  this.setState({
+                    imgSource: null
+                  })
+                }}
+                />
+            </View>
+            <View>
+              <Button title='Dream' color='black'/>
+            </View>
+          </View>
+        </View>
       )
     } else {
       return (
@@ -58,7 +56,11 @@ export default class CameraScreen extends React.Component {
           </Camera>
           <View style={styles.buttonBar}>
             <View>
-            <Ionicons name='md-images' size={30}/>
+            <Ionicons 
+              name='md-images' 
+              size={30}
+              onPress={this.handlePickImage}
+            />
             </View>
             <View>
               <Ionicons 
@@ -98,6 +100,23 @@ export default class CameraScreen extends React.Component {
           </View>
         </View>
       );
+    }
+  }
+
+  handlePickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false
+    });
+
+    console.log('picked from gallery: ' + result);
+
+    if (!result.cancelled) {
+      this.setState({ 
+        imgSource: { 
+          uri: result.uri 
+        }
+      });
     }
   }
 }
