@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import {
   createStackNavigator,
   createBottomTabNavigator,
+  withNavigationFocus
 } from 'react-navigation';
 
 import TabBarIcon from '../components/TabBarIcon';
@@ -41,6 +42,7 @@ CameraStack.navigationOptions = {
       name={Platform.OS === 'ios' ? 'ios-camera' : 'md-camera'}
     />
   ),
+  focused: true
 };
 
 const LinksStack = createStackNavigator({

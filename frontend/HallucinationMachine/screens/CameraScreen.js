@@ -3,16 +3,20 @@ import { Text, View, TouchableOpacity, StyleSheet, Button, Image } from 'react-n
 import * as Permissions from 'expo-permissions';
 import { Camera } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import { FileSystem, ImagePicker } from 'expo';
+import { FileSystem } from 'expo';
+import * as ImagePicker from 'expo-image-picker'
+import { withNavigationFocus } from "react-navigation";
 
 export default class CameraScreen extends React.Component {
   state = {
     hasCameraPermission: null,
+    hasCameraRollPermission: null,
     type: Camera.Constants.Type.back,
     imgSource: null
   };
 
   async componentDidMount() {
+    console.log('componentDidMount');
     const { status } = await Permissions.askAsync(Permissions.CAMERA);
     this.setState({ hasCameraPermission: status === 'granted' });
   }
@@ -20,11 +24,13 @@ export default class CameraScreen extends React.Component {
   render() {
     const { hasCameraPermission } = this.state;
     const { imgSource } = this.state
+    const isFocused = this.props.navigation.isFocused();
+    console.log("Camera tab is focused: " + isFocused)
     if (hasCameraPermission === null) {
       return <View />;
     } else if (hasCameraPermission === false) {
       return <Text>No access to camera</Text>;
-    } else if (imgSource !== null) {
+    } else if (imgSource !== null) { // if the image is picked from the gallery or captured with the camera
       return (
         <View style={{ flex: 1 }}>
           <Image style={styles.capturedImage} source={imgSource}/>
@@ -38,7 +44,7 @@ export default class CameraScreen extends React.Component {
                     imgSource: null
                   })
                 }}
-                />
+              />
             </View>
             <View>
               <Button title='Dream' color='black'/>
@@ -46,7 +52,13 @@ export default class CameraScreen extends React.Component {
           </View>
         </View>
       )
-    } else {
+    } else if (!isFocused) { // TODO: fix, camera has to run when the tab is switched
+      return (
+        <View>
+          <Text>Camera tab is not in focus</Text>
+        </View>
+      )
+    } else if (isFocused) { // otherwise, render the camera
       return (
         <View style={{ flex: 1 }}>
           <Camera 
@@ -56,11 +68,7 @@ export default class CameraScreen extends React.Component {
           </Camera>
           <View style={styles.buttonBar}>
             <View>
-            <Ionicons 
-              name='md-images' 
-              size={30}
-              onPress={this.handlePickImage}
-            />
+            <Ionicons name='md-images' size={30} onPress={this.handlePickImage}/>
             </View>
             <View>
               <Ionicons 
@@ -104,12 +112,17 @@ export default class CameraScreen extends React.Component {
   }
 
   handlePickImage = async () => {
+    // TODO: this is never checked
+    if (this.state.hasCameraPermission === null) {
+      const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+      this.setState({ hasCameraRollPermission: status === 'granted' });
+    }
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false
     });
 
-    console.log('picked from gallery: ' + result);
+    console.log('picked from camera roll: ' + result.uri);
 
     if (!result.cancelled) {
       this.setState({ 
