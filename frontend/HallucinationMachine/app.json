@@ -29,7 +29,8 @@
     "android": {
       "permissions": [
         "CAMERA",
-        "CAMERA_ROLL"
+        "CAMERA_ROLL",
+        "WRITE_EXTERNAL_STORAGE"
       ]
     }
   }

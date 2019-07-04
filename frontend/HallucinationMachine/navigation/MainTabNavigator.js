@@ -42,7 +42,6 @@ CameraStack.navigationOptions = {
       name={Platform.OS === 'ios' ? 'ios-camera' : 'md-camera'}
     />
   ),
-  focused: true
 };
 
 const LinksStack = createStackNavigator({
@@ -76,6 +75,5 @@ SettingsStack.navigationOptions = {
 export default createBottomTabNavigator({
   HomeStack,
   CameraStack,
-  LinksStack,
   SettingsStack,
 });

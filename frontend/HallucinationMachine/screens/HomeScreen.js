@@ -35,7 +35,7 @@ export default function HomeScreen() {
 
         <View style={styles.descriptionText}>
         <Text> 
-          This is an application based on Google's DeepDream project!!!
+          This is an application based on Google's DeepDream project!
         </Text>
         <Text onPress={handleDeepDreamPress} style={styles.deepDreamLinkText}>
           Learn more
