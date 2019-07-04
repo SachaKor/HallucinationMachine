@@ -18,7 +18,7 @@ In the `Camera` tab, the user can take a picture by clicking the middle _Camera_
 
 Once the image is chosen, the following screen appears:  
 
-![](./img/DreamScreen.jpg =500x1000)  
+![](./img/DreamScreen.jpg =250x500)  
 
 To launch the "hallucination" process, the user has to click the _Dream_ button.  
 By now, the server is only able to upload the selected image.
