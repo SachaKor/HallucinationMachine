@@ -17,7 +17,6 @@ For the moment, only `Home` and `Camera` tabs are implemented as shown below:
 In the `Camera` tab, the user can take a picture by clicking the middle _Camera_ icon or upload a picture from the camera roll by clicking the _Gallery_ icon on the left. The _Flip_ icon on the right lets the user flip the camera between the front and the back ones.  
 
 Once the image is chosen, the following screen appears:  
-
 ![](./img/DreamScreen.jpg)  
 
 To launch the "hallucination" process, the user has to click the _Dream_ button.  

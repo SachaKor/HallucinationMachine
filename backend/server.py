@@ -1,17 +1,23 @@
-from flask import Flask, flash, request, redirect, url_for, session
+from flask import Flask, flash, request, redirect, url_for, session, send_file
 from werkzeug.utils import secure_filename
 from flask_cors import CORS, cross_origin
 import os
 import json
 import logging
 import sys
+import inception5h
+import deepdream as dd
+
+inception5h.maybe_download()
 
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger('HELLO')
 
+os.environ['KMP_DUPLICATE_LIB_OK']='True' # for matplotlib
+
 UPLOAD_FOLDER = './img'
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -21,6 +27,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def dream():
+    dd.dream('img/image.jpg')
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -39,10 +48,8 @@ def hello_world():
         destination="/".join([target, filename])
         file.save(destination)
         session['uploadFilePath']=destination
-        resp = {
-            "response": "Something went perfectly fine"
-        }
-        return json.dumps(resp)
+        dream()
+        return send_file('img/deapdream_image.jpg', mimetype='image/jpg')
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(24)

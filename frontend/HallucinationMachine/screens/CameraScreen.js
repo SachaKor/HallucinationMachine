@@ -103,7 +103,8 @@ export default class CameraScreen extends React.Component {
             hasCameraPermission: true
           })
           ImagePicker.launchCameraAsync({
-            allowsEditing: false
+            allowsEditing: false,
+            quality: 0.3
           })
             .then(res => {
               this.setState({
@@ -117,7 +118,8 @@ export default class CameraScreen extends React.Component {
   handlePickImage = () => {
     ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false
+      allowsEditing: false,
+      quality: 0.3
     })
       .then(result => {
         console.log("img uri: " + result.uri)
@@ -126,6 +128,15 @@ export default class CameraScreen extends React.Component {
         })
       })
   }
+
+  // arrayBufferToBase64 = (buffer) => {
+  //   var binary = '';
+  //   var bytes = [].slice.call(new Uint8Array(buffer));
+  
+  //   bytes.forEach((b) => binary += String.fromCharCode(b));
+  
+  //   return window.btoa(binary);
+  // }
 
   handleDreamButtonPress = () => {
     const {image} = this.state;
@@ -149,7 +160,7 @@ export default class CameraScreen extends React.Component {
         method: 'POST',
         body: formData,
         headers: {
-          Accept: 'application/json',
+          'Accept': 'application/json',
           'Content-Type': 'multipart/form-data',
         }
       };
@@ -157,9 +168,26 @@ export default class CameraScreen extends React.Component {
       fetch(SERVER_URL, options)
         .then(res => {
           alert('Image successfully uploaded!')
-          res.json
+          // console.log('result: ' + JSON.stringify(res))
+          res.blob()
+            .then((blo) => {
+              const fr = new FileReader();
+              fr.readAsDataURL(blo)
+              fr.onload = () => {
+                const base64img = fr.result;
+                this.setState({
+                  image: {
+                    uri: base64img
+                  }
+                })
+              }
+            })
+            .catch(err => console.log(err))
+          // return res.json()
         })
-        .then(resJson => console.log(JSON.stringify(resJson)))
+        // .then(resJson => {
+        //   console.log(JSON.stringify(resJson))
+        // })
         .catch(err => console.log(err));
     } else {
       alert('No image picked!')
