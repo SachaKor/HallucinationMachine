@@ -1,35 +1,69 @@
 import React from 'react';
-import { Text, View, TouchableOpacity, StyleSheet, Button, Image, Platform } from 'react-native';
+import { 
+  Text, 
+  View, 
+  StyleSheet,
+  Button, 
+  Image, 
+  Alert,
+  CameraRoll,
+  ToastAndroid,
+  Share } from 'react-native';
 import * as Permissions from 'expo-permissions';
 import { Camera } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker'
-import { withNavigationFocus } from "react-navigation";
-import Constants from 'expo-constants';
+import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
-import { SERVER_URL } from 'react-native-dotenv'
+import { SERVER_URL } from 'react-native-dotenv';
+import { conditionalExpression } from '@babel/types';
 
 export default class CameraScreen extends React.Component {
   state = {
     hasCameraPermission: null,
     hasCameraRollPermission: null,
     type: Camera.Constants.Type.back,
-    image: null
+    image: null,
+    processedImage: null,
+    resultSaved: false
   };
 
   async componentDidMount() {
     const { status } = await Permissions.askAsync(Permissions.CAMERA);
     this.setState({ hasCameraPermission: status === 'granted' });
+
+    FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + 'images')
+      .catch(e => {
+        console.log(e, 'Directory exists');
+      });
   }
 
   render() {
-    const { hasCameraPermission } = this.state;
-    const { image } = this.state
-    const isFocused = this.props.navigation.isFocused();
+    const { 
+      hasCameraPermission, 
+      image, 
+      imageWidth, 
+      imageHeight,
+      processedImage } = this.state;
     if (hasCameraPermission === null) {
       return <View />;
     } else if (hasCameraPermission === false) {
       return <Text>No access to camera</Text>;
+    } else if (processedImage) { 
+      return (
+        <View style={styles.imageView}>
+          <Image style={styles.capturedImage} source={{uri: processedImage.uri}}/>
+          <View style={styles.buttonBar}>
+            <View>
+              <Ionicons 
+                name='md-arrow-back' 
+                size={30} 
+                onPress = {this.displayUnsavedImageAlert}
+              />
+            </View>
+              <Button title='Save' color='black' onPress={this.handleSaveButtonPress}/>
+            </View>
+          </View>
+      )
     } else if (image) { // if the image is picked from the gallery or captured with the camera
       return (
         <View style={{ flex: 1 }}>
@@ -39,11 +73,7 @@ export default class CameraScreen extends React.Component {
               <Ionicons 
                 name='md-arrow-back' 
                 size={30} 
-                onPress = {() => {
-                  this.setState({
-                    image: null
-                  })
-                }}
+                onPress = {this.handleBackArrowPressed}
               />
             </View>
             <View>
@@ -52,13 +82,7 @@ export default class CameraScreen extends React.Component {
           </View>
         </View>
       )
-    } else if (!isFocused) { // TODO: fix, camera has to run when the tab is switched
-      return (
-        <View>
-          <Text>Camera tab is not in focus</Text>
-        </View>
-      )
-    } else if (isFocused) { // otherwise, render the camera
+    } else { // otherwise, render the camera
       return (
         <View style={{ flex: 1 }}>
           <Camera 
@@ -86,6 +110,60 @@ export default class CameraScreen extends React.Component {
     }
   }
 
+  handleBackArrowPressed = () => {
+    this.setState({
+      image: null,
+      processedImage: null,
+      resultSaved: false
+    })
+  }
+
+  // maybe display
+  displayUnsavedImageAlert = () => {
+    const {resultSaved} = this.state;
+    if(!resultSaved) {
+      Alert.alert(
+        'Save the image',
+        'The image will be lost if you leave this page\nWould you like to save the image?',
+        [
+          {
+            text: 'YES',
+            onPress: this.handleSaveButtonPress,
+            style: 'cancel',
+          },
+          {
+            text: 'NO', 
+            onPress: this.handleBackArrowPressed
+          },
+        ],
+        {cancelable: false},
+      );
+    } else {
+      this.handleBackArrowPressed()
+    }
+  }
+
+  handleSaveButtonPress = () => {
+    const {processedImage, resultSaved} = this.state
+    if(processedImage && !resultSaved) {
+      const path = FileSystem.cacheDirectory + 'images/processed.jpg'
+      var image_data = processedImage.uri.split('data:application/octet-stream;base64,')
+      image_data = image_data[1]
+      FileSystem.writeAsStringAsync(
+        path, 
+        image_data, 
+        {encoding: FileSystem.EncodingType.Base64})
+        .then(res => {
+          CameraRoll.saveToCameraRoll(path)
+          ToastAndroid.show('Saved', ToastAndroid.SHORT);
+          FileSystem.deleteAsync(path)
+          this.setState({resultSaved: true})
+        })
+    } else if(!processedImage) {
+      alert('Nothing to save!')
+    }
+  }
+
   handleFlipCamera = () => {
     this.setState({
       type:
@@ -96,47 +174,29 @@ export default class CameraScreen extends React.Component {
   }
 
   handleCaptureImage = () => {
-    Permissions.askAsync(Permissions.CAMERA)
-      .then(perm => {
-        if (perm.status == 'granted') {
-          this.setState({
-            hasCameraPermission: true
-          })
-          ImagePicker.launchCameraAsync({
-            allowsEditing: false,
-            quality: 0.3
-          })
-            .then(res => {
-              this.setState({
-                image: res
-              })
-            })
-        }
-      })
+    if (this.camera) {
+      this.camera.takePictureAsync({ quality: 0.1 })
+        .then(img => this.setState({
+          image: img
+        }))
+    }
   }
 
   handlePickImage = () => {
     ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
-      quality: 0.3
+      quality: 0.1
     })
       .then(result => {
-        console.log("img uri: " + result.uri)
-        this.setState({
-          image: result
-        })
+        if(result.cancelled === false) {
+          this.setState({
+            image: result
+          })
+        }
       })
   }
 
-  // arrayBufferToBase64 = (buffer) => {
-  //   var binary = '';
-  //   var bytes = [].slice.call(new Uint8Array(buffer));
-  
-  //   bytes.forEach((b) => binary += String.fromCharCode(b));
-  
-  //   return window.btoa(binary);
-  // }
 
   handleDreamButtonPress = () => {
     const {image} = this.state;
@@ -145,10 +205,6 @@ export default class CameraScreen extends React.Component {
       let formData = new FormData();
       let uriParts = uri.split('.');
       let fileType = uriParts[uriParts.length - 1];
-      const serverAddress = 'http://192.168.1.115:5000'
-      console.log("SERVER_URL: ", SERVER_URL);
-
-      console.log('fileType: ' + fileType);
 
       formData.append('file', {
         uri,
@@ -167,8 +223,7 @@ export default class CameraScreen extends React.Component {
 
       fetch(SERVER_URL, options)
         .then(res => {
-          alert('Image successfully uploaded!')
-          // console.log('result: ' + JSON.stringify(res))
+          alert('Voilà!')
           res.blob()
             .then((blo) => {
               const fr = new FileReader();
@@ -176,18 +231,14 @@ export default class CameraScreen extends React.Component {
               fr.onload = () => {
                 const base64img = fr.result;
                 this.setState({
-                  image: {
+                  processedImage: {
                     uri: base64img
                   }
                 })
               }
             })
             .catch(err => console.log(err))
-          // return res.json()
         })
-        // .then(resJson => {
-        //   console.log(JSON.stringify(resJson))
-        // })
         .catch(err => console.log(err));
     } else {
       alert('No image picked!')
@@ -196,6 +247,9 @@ export default class CameraScreen extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  imageView: {
+    flex: 1
+  },
   buttonBar: {
     flex: 0.15,
     flexDirection: 'row',

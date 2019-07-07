@@ -24,7 +24,7 @@ By now, the server is only able to upload the selected image.
 
 ### Next steps   
 
-- [ ] Integrate the DeepDream code to the backend and launch it when the _Dream_ button is pressed, then render the result to the UI  
+- [x] Integrate the DeepDream code to the backend and launch it when the _Dream_ button is pressed, then render the result to the UI  
 - [ ] `Settings` tab: create a screen letting the user customise the image rendered by the application. The user will be able to choose filters, layers and the feature channels maximised by the DeepDream algorithm.  
 - [ ] Update the `Home` tab: project description, user guide.  
 - [ ] Improve the style of the application  
