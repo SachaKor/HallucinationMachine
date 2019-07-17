@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { SERVER_URL } from 'react-native-dotenv';
-import { conditionalExpression } from '@babel/types';
 
 export default class CameraScreen extends React.Component {
   state = {
@@ -175,7 +174,7 @@ export default class CameraScreen extends React.Component {
 
   handleCaptureImage = () => {
     if (this.camera) {
-      this.camera.takePictureAsync({ quality: 0.1 })
+      this.camera.takePictureAsync({ quality: 0.05 })
         .then(img => this.setState({
           image: img
         }))
@@ -200,6 +199,7 @@ export default class CameraScreen extends React.Component {
 
   handleDreamButtonPress = () => {
     const {image} = this.state;
+    console.log('SERVER URL: ' + SERVER_URL)
     if(image) {
       const uri = image.uri
       let formData = new FormData();
@@ -221,7 +221,7 @@ export default class CameraScreen extends React.Component {
         }
       };
 
-      fetch(SERVER_URL, options)
+      fetch(SERVER_URL+'/dream', options)
         .then(res => {
           alert('Voilà!')
           res.blob()

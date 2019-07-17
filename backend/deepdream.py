@@ -12,6 +12,18 @@ from scipy.ndimage.filters import gaussian_filter
 session = None
 model   = None
 
+def get_layers():
+    model = inception5h.Inception5h()
+    layers = []
+    for layer in model.layer_tensors:
+        l = {
+            'name': layer.name,
+            'nbChannels': layer.get_shape().as_list()[3]
+        }
+        layers.append(l)
+    return layers
+
+
 def dream(image_filename):
     global model
     global session

@@ -32,24 +32,38 @@ def dream():
     dd.dream('img/image.jpg')
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/dream', methods=['POST'])
 # @cross_origin(headers=['Content-Type', 'application/json'])
 def hello_world():
-    if request.method == 'GET':
-        resp = {
-            "response": "Hello, GET"
-        }
-        return json.dumps(resp)
-    elif request.method == 'POST':
-        target = UPLOAD_FOLDER
-        logger.info("welcome to upload")
-        file = request.files['file']
-        filename = secure_filename(file.filename)
-        destination="/".join([target, filename])
-        file.save(destination)
-        session['uploadFilePath']=destination
-        dream()
-        return send_file('img/deapdream_image.jpg', mimetype='image/jpg')
+    target = UPLOAD_FOLDER
+    logger.info("uploading the image")
+    file = request.files['file']
+    filename = secure_filename(file.filename)
+    destination="/".join([target, filename])
+    file.save(destination)
+    logger.info('image uploaded')
+    session['uploadFilePath']=destination
+    logger.info('processing the image')
+    dream()
+    logger.info('done')
+    return send_file('img/deapdream_image.jpg', mimetype='image/jpg')
+
+@app.route('/layers', methods=['GET'])
+def get_layers():
+    # dd.get_layers() returns a list containing the layer names and
+    # the number of channels per layer, like:
+    # [
+    #     {
+    #         'name': 'conv2d0:0',
+    #         'nbChannels': 64},
+    #     {
+    #         'name': 'conv2d1:0',
+    #         'nbChannels': 64}
+    #     }
+    #     ...
+    # ]
+    layers = dd.get_layers()
+    return json.dumps(layers)
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(24)
