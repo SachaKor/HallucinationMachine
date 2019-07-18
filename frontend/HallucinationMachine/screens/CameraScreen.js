@@ -200,7 +200,12 @@ class CameraScreen extends React.Component {
   handleDreamButtonPress = () => {
     const {image} = this.state;
     console.log('SERVER URL: ' + SERVER_URL)
-    console.log('Selected layers: ' + JSON.stringify(this.props.layers))
+    const selectedLayers = this.props.layers.filter(layer => layer.selected)
+    if (selectedLayers.length === 0) {
+      alert('No layers selected. Please go to the Settings tab and select the layers to amplify')
+      return
+    } 
+    console.log('Selected layers: ' + JSON.stringify(selectedLayers[0]))
     if(image) {
       const uri = image.uri
       let formData = new FormData();
@@ -212,6 +217,8 @@ class CameraScreen extends React.Component {
         name: `image.${fileType}`,
         type: `image/${fileType}`
       });
+
+      formData.append('layer', JSON.stringify(selectedLayers[0]))
 
       let options = {
         method: 'POST',
@@ -248,7 +255,7 @@ class CameraScreen extends React.Component {
 }
 
 const mapStateToProps = state => ({
-  layers: state.Layers
+  layers: state.Layers.layerData
 });
 
 export default connect(mapStateToProps)(CameraScreen);

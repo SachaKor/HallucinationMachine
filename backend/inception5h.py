@@ -114,6 +114,13 @@ class Inception5h:
             # Get references to the tensors for the commonly used layers.
             self.layer_tensors = [self.graph.get_tensor_by_name(name + ":0") for name in self.layer_names]
 
+    def get_layer_tensor_by_name(self, layerName):
+        """
+        layerName is the name of the layer, like 'conv2d1:0'
+        """
+        if ':0' in layerName and layerName[:layerName.index(':0')] in self.layer_names:
+            return self.graph.get_tensor_by_name(layerName)
+
     def create_feed_dict(self, image=None):
         """
         Create and return a feed-dict with an image.
