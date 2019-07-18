@@ -44,7 +44,7 @@ def hello_world():
     logger.info('image uploaded')
     session['uploadFilePath']=destination
     logger.info('processing the image')
-    dream()
+    # dream()
     logger.info('done')
     return send_file('img/deapdream_image.jpg', mimetype='image/jpg')
 

@@ -4,9 +4,13 @@ import { Text, FlatList, View } from "react-native";
 import { ListItem, Button } from "react-native-elements";
 import Accordian from "../components/Accordian";
 import { SERVER_URL } from 'react-native-dotenv';
+import { connect } from 'react-redux';
+import { addLayer, removeLayer } from '../actions';
 
-export default class SettingsScreen extends React.PureComponent {
+
+class SettingsScreen extends React.PureComponent {
   
+  // data containss layer info
   state = {
     data: []
   }
@@ -45,7 +49,19 @@ export default class SettingsScreen extends React.PureComponent {
   }
 
   onCheckBoxPressed = (title, channelFrom, channelTo) => {
+    // redux store
     var newData = this.state.data;
+    const layer = newData.find((layer) => layer.name === title)
+    if (layer.selected) {
+      this.props.removeLayer(title)
+    } else {
+      const layer = {
+        name: title, 
+        fromChannel: channelFrom, 
+        toChannel: channelTo
+      }
+      this.props.addLayer(layer)
+    }
     newData = newData.map(item => {
       var temp = {...item}
       if (item.name === title) {
@@ -59,6 +75,7 @@ export default class SettingsScreen extends React.PureComponent {
     this.setState({
       data: newData
     });
+    
   }
 
   renderItem = ({item}) => (
@@ -87,3 +104,14 @@ export default class SettingsScreen extends React.PureComponent {
     );
   };
 }
+
+const mapStateToProps = state => ({
+  layers: state.Layers.layersData
+});
+
+const mapDispatchToProps = dispatch => ({
+  addLayer: layer => dispatch(addLayer(layer)),
+  removeLayer: layerName => dispatch(removeLayer(layerName))
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(SettingsScreen)

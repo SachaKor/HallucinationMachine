@@ -15,8 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { SERVER_URL } from 'react-native-dotenv';
+import { connect } from 'react-redux';
 
-export default class CameraScreen extends React.Component {
+class CameraScreen extends React.Component {
   state = {
     hasCameraPermission: null,
     hasCameraRollPermission: null,
@@ -81,7 +82,7 @@ export default class CameraScreen extends React.Component {
           </View>
         </View>
       )
-    } else { // otherwise, render the camera
+    } else { // otherwise, render the ccamera
       return (
         <View style={{ flex: 1 }}>
           <Camera 
@@ -196,10 +197,10 @@ export default class CameraScreen extends React.Component {
       })
   }
 
-
   handleDreamButtonPress = () => {
     const {image} = this.state;
     console.log('SERVER URL: ' + SERVER_URL)
+    console.log('Selected layers: ' + JSON.stringify(this.props.layers))
     if(image) {
       const uri = image.uri
       let formData = new FormData();
@@ -245,6 +246,12 @@ export default class CameraScreen extends React.Component {
     }
   }
 }
+
+const mapStateToProps = state => ({
+  layers: state.Layers
+});
+
+export default connect(mapStateToProps)(CameraScreen);
 
 const styles = StyleSheet.create({
   imageView: {
