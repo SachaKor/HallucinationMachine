@@ -40,10 +40,7 @@ def dream(image_filename, layer):
     model = inception5h.Inception5h()
     session = tf.InteractiveSession(graph=model.graph)
 
-    print('LAYER TENSORS')
-    # print(layer_tensor)
     image = image_utils.load_image(filename=image_filename)
-    # layer_tensor = model.layer_tensors[3]
     layer_tensor = model.get_layer_tensor_by_name(layer['name'])[:,:,:,layer['fromChannel']:layer['toChannel']]
     img_result = recursive_optimize(layer_tensor=layer_tensor, image=image,
                  num_iterations=10, step_size=3.0, rescale_factor=0.7,
