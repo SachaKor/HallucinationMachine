@@ -16,6 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { SERVER_URL } from 'react-native-dotenv';
 import { connect } from 'react-redux';
+import { NavigationEvents } from 'react-navigation';
 
 class CameraScreen extends React.Component {
   state = {
@@ -24,7 +25,8 @@ class CameraScreen extends React.Component {
     type: Camera.Constants.Type.back,
     image: null,
     processedImage: null,
-    resultSaved: false
+    resultSaved: false,
+    isFocused: true
   };
 
   async componentDidMount() {
@@ -82,14 +84,37 @@ class CameraScreen extends React.Component {
           </View>
         </View>
       )
-    } else { // otherwise, render the camera  
+    } else if(this.state.isFocused === false) {
+      return (
+        <NavigationEvents
+              onWillFocus={payload => {
+                  //console.log("will focus", payload);
+                  this.setState({isFocused:true})
+              }}
+              onDidBlur={payload => {
+                  //console.log('did leave',payload)
+                  this.setState({isFocused:false})
+              }}
+          />
+   ) 
+  } else { // otherwise, render the camera  
       return (
         <View style={{ flex: 1 }}>
-          <Camera 
+         <Camera 
             style={{ flex: 1 }} 
             type={this.state.type}
             ref={ref => { this.camera = ref; }}>
-          </Camera>
+        <NavigationEvents
+                    onWillFocus={payload => {
+                        //console.log("will focus", payload);
+                        this.setState({isFocused:true})
+                    }}
+                    onDidBlur={payload => {
+                        //console.log('did leave',payload)
+                        this.setState({isFocused:false})
+                    }}
+          />
+          </Camera> 
           <View style={styles.buttonBar}>
             <View><Ionicons name='md-images' size={30} onPress={this.handlePickImage}/></View>
             <View>
@@ -118,7 +143,7 @@ class CameraScreen extends React.Component {
     })
   }
 
-  // mayybe display
+  // maybe display
   displayUnsavedImageAlert = () => {
     const {resultSaved} = this.state;
     if(!resultSaved) {
@@ -159,6 +184,7 @@ class CameraScreen extends React.Component {
           FileSystem.deleteAsync(path)
           this.setState({resultSaved: true})
         })
+        .catch(err => console.log(err))
     } else if(!processedImage) {
       alert('Nothing  to save!')
     }
@@ -257,7 +283,7 @@ const mapStateToProps = state => ({
   layers: state.Layers.layerData
 });
 
-export default connect(mapStateToProps)(CameraScreen);
+export default connect(mapStateToProps)(CameraScreen)
 
 const styles = StyleSheet.create({
   imageView: {

@@ -37,7 +37,6 @@ class SettingsScreen extends React.PureComponent {
           keyExtractor={item => item.name}
           ListFooterComponent={this.renderSeparator}
         />
-        <Button title='Pum' onPress={this.handleButtonPressed}/>
       </View>
     )
   }
@@ -48,10 +47,6 @@ class SettingsScreen extends React.PureComponent {
       nbChannels={item.nbChannels}
     />
   )
-
-  handleButtonPressed = () => {
-    alert('Pum!');
-  };
 
   renderSeparator = () => {
     return (
