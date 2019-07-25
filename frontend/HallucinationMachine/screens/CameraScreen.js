@@ -26,7 +26,8 @@ class CameraScreen extends React.Component {
     image: null,
     processedImage: null,
     resultSaved: false,
-    isFocused: true
+    isFocused: true,
+    dreamButtonDisabled: false
   };
 
   async componentDidMount() {
@@ -45,7 +46,8 @@ class CameraScreen extends React.Component {
       image, 
       imageWidth, 
       imageHeight,
-      processedImage } = this.state;
+      processedImage,
+      dreamButtonDisabled } = this.state;
     if (hasCameraPermission === null) {
       return <View />;
     } else if (hasCameraPermission === false) {
@@ -79,7 +81,11 @@ class CameraScreen extends React.Component {
               />
             </View>
             <View>
-              <Button title='Dream' color='black' onPress = {this.handleDreamButtonPress}/>
+              <Button 
+                title='Dream' 
+                color='black' 
+                disabled={dreamButtonDisabled} 
+                onPress = {this.handleDreamButtonPress}/>
             </View>
           </View>
         </View>
@@ -180,6 +186,7 @@ class CameraScreen extends React.Component {
         {encoding: FileSystem.EncodingType.Base64})
         .then(res => {
           CameraRoll.saveToCameraRoll(path)
+          .catch(err => console.log(err))
           ToastAndroid.show('Saved', ToastAndroid.SHORT);
           FileSystem.deleteAsync(path)
           this.setState({resultSaved: true})
@@ -237,6 +244,8 @@ class CameraScreen extends React.Component {
       let uriParts = uri.split('.');
       let fileType = uriParts[uriParts.length - 1];
 
+      this.setState({dreamButtonDisabled: true})
+
       formData.append('file', {
         uri,
         name: `image.${fileType}`,
@@ -266,13 +275,20 @@ class CameraScreen extends React.Component {
                 this.setState({
                   processedImage: {
                     uri: base64img
-                  }
+                  },
+                  dreamButtonDisabled: false
                 })
               }
             })
             .catch(err => console.log(err))
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+          alert('Something went wrong')
+          console.log(err)
+          this.setState({
+            dreamButtonDisabled: false
+          })
+        });
     } else {
       alert('No image picked!')
     }

@@ -9,7 +9,6 @@ import inception5h
 import tensorflow as tf
 from scipy.ndimage.filters import gaussian_filter
 
-session = None
 model   = None
 
 def get_layers():
@@ -36,16 +35,15 @@ def dream(image_filename, layer):
     }
     """
     global model
-    global session
     model = inception5h.Inception5h()
-    session = tf.InteractiveSession(graph=model.graph)
+    session = tf.compat.v1.Session(graph=model.graph)
 
     image = image_utils.load_image(filename=image_filename)
     layer_tensor = model.get_layer_tensor_by_name(layer['name'])[:,:,:,layer['fromChannel']:layer['toChannel']+1]
     print('Layer tensor: ' + str(layer_tensor))
     img_result = recursive_optimize(layer_tensor=layer_tensor, image=image,
                  num_iterations=10, step_size=3.0, rescale_factor=0.7,
-                 num_repeats=4, blend=0.2)
+                 num_repeats=4, blend=0.2, session=session)
     image_utils.save_image(img_result, filename='img/deapdream_image.jpg')
     session.close()
 
@@ -66,7 +64,7 @@ def get_tile_size(num_pixels, tile_size=400):
 
     return actual_tile_size
 
-def tiled_gradient(gradient, image, tile_size=400):
+def tiled_gradient(gradient, image, tile_size=400, session=None):
     # Allocate an array for the gradient of the entire image.
     grad = np.zeros_like(image)
 
@@ -117,7 +115,6 @@ def tiled_gradient(gradient, image, tile_size=400):
             feed_dict = model.create_feed_dict(image=img_tile)
 
             # Use TensorFlow to calculate the gradient-value.
-            global session
             g = session.run(gradient, feed_dict=feed_dict)
 
             # Normalize the gradient for the tile. This is
@@ -139,7 +136,7 @@ def tiled_gradient(gradient, image, tile_size=400):
 
 def optimize_image(layer_tensor, image,
                    num_iterations=10, step_size=3.0, tile_size=400,
-                   show_gradient=False):
+                   show_gradient=False, session=None):
     """
     Use gradient ascent to optimize an image so it maximizes the
     mean value of the given layer_tensor.
@@ -174,7 +171,7 @@ def optimize_image(layer_tensor, image,
         # This tells us how to change the image so as to
         # maximize the mean of the given layer-tensor.
         grad = tiled_gradient(gradient=gradient, image=img,
-                              tile_size=tile_size)
+                              tile_size=tile_size, session=session)
 
         # Blur the gradient with different amounts and add
         # them together. The blur amount is also increased
@@ -220,7 +217,7 @@ def optimize_image(layer_tensor, image,
 def recursive_optimize(layer_tensor, image,
                        num_repeats=4, rescale_factor=0.7, blend=0.2,
                        num_iterations=10, step_size=3.0,
-                       tile_size=400):
+                       tile_size=400, session=None):
     """
     Recursively blur and downscale the input image.
     Each downscaled image is run through the optimize_image()
@@ -260,7 +257,7 @@ def recursive_optimize(layer_tensor, image,
                                         blend=blend,
                                         num_iterations=num_iterations,
                                         step_size=step_size,
-                                        tile_size=tile_size)
+                                        tile_size=tile_size, session=session)
 
         # Upscale the resulting image back to its original size.
         img_upscaled = image_utils.resize_image(image=img_result, size=image.shape)
@@ -275,6 +272,6 @@ def recursive_optimize(layer_tensor, image,
                                 image=image,
                                 num_iterations=num_iterations,
                                 step_size=step_size,
-                                tile_size=tile_size)
+                                tile_size=tile_size, session=session)
 
     return img_result

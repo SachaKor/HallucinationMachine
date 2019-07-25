@@ -11,7 +11,7 @@ import { addLayer, removeLayer, addLayerData } from '../actions';
 class SettingsScreen extends React.PureComponent {
 
   componentDidMount() {
-    console.log('SERVER URLL: ' + SERVER_URL)
+    console.log('SERVER URL: ' + SERVER_URL)
     console.log('Getting layers info from server....');
     fetch(SERVER_URL + '/layers')
       .then(res => res.json())
@@ -23,7 +23,10 @@ class SettingsScreen extends React.PureComponent {
         this.props.addLayerData(newData)
         console.log("Number of layers: " + newData.length)
       })
-      .catch(err => console.log(err))
+      .catch(err => {
+        alert('Something went wrong')
+        console.log(err)
+      })
   }
 
   render() {
