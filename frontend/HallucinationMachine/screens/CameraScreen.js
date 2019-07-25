@@ -82,7 +82,7 @@ class CameraScreen extends React.Component {
           </View>
         </View>
       )
-    } else { // otherwise, render the ccamera
+    } else { // otherwise, render the camera  
       return (
         <View style={{ flex: 1 }}>
           <Camera 
@@ -118,7 +118,7 @@ class CameraScreen extends React.Component {
     })
   }
 
-  // maybe display
+  // mayybe display
   displayUnsavedImageAlert = () => {
     const {resultSaved} = this.state;
     if(!resultSaved) {
@@ -160,7 +160,7 @@ class CameraScreen extends React.Component {
           this.setState({resultSaved: true})
         })
     } else if(!processedImage) {
-      alert('Nothing to save!')
+      alert('Nothing  to save!')
     }
   }
 
@@ -175,7 +175,7 @@ class CameraScreen extends React.Component {
 
   handleCaptureImage = () => {
     if (this.camera) {
-      this.camera.takePictureAsync({ quality: 0.05 })
+      this.camera.takePictureAsync({ quality: 0.1 })
         .then(img => this.setState({
           image: img
         }))
@@ -205,7 +205,6 @@ class CameraScreen extends React.Component {
       alert('No layers selected. Please go to the Settings tab and select the layers to amplify')
       return
     } 
-    console.log('Selected layers: ' + JSON.stringify(selectedLayers[0]))
     if(image) {
       const uri = image.uri
       let formData = new FormData();

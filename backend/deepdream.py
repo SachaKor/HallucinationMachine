@@ -41,7 +41,8 @@ def dream(image_filename, layer):
     session = tf.InteractiveSession(graph=model.graph)
 
     image = image_utils.load_image(filename=image_filename)
-    layer_tensor = model.get_layer_tensor_by_name(layer['name'])[:,:,:,layer['fromChannel']:layer['toChannel']]
+    layer_tensor = model.get_layer_tensor_by_name(layer['name'])[:,:,:,layer['fromChannel']:layer['toChannel']+1]
+    print('Layer tensor: ' + str(layer_tensor))
     img_result = recursive_optimize(layer_tensor=layer_tensor, image=image,
                  num_iterations=10, step_size=3.0, rescale_factor=0.7,
                  num_repeats=4, blend=0.2)

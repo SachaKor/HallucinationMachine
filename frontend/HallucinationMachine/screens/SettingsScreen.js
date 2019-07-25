@@ -11,7 +11,7 @@ import { addLayer, removeLayer, addLayerData } from '../actions';
 class SettingsScreen extends React.PureComponent {
 
   componentDidMount() {
-    console.log('SERVER URL: ' + SERVER_URL)
+    console.log('SERVER URLL: ' + SERVER_URL)
     console.log('Getting layers info from server....');
     fetch(SERVER_URL + '/layers')
       .then(res => res.json())
@@ -66,6 +66,7 @@ class SettingsScreen extends React.PureComponent {
   };
 }
 
+// redux
 const mapStateToProps = state => ({
   layers: state.Layers.layerData
 });
