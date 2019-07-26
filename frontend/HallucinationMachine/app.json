@@ -2,12 +2,10 @@
   "expo": {
     "name": "Hallucination Machine",
     "slug": "HallucinationMachine",
-    "privacy": "public",
+    "privacy": "unlisted",
     "sdkVersion": "33.0.0",
     "platforms": [
-      "ios",
-      "android",
-      "web"
+      "android"
     ],
     "version": "1.0.0",
     "orientation": "portrait",
@@ -32,6 +30,8 @@
         "CAMERA_ROLL",
         "WRITE_EXTERNAL_STORAGE"
       ]
-    }
+    },
+    "description": "Hallucination Machine is the app for DeepDream exloration",
+    "githubUrl": "https://github.com/SachaKor/HallucinationMachine"
   }
 }
