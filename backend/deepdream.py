@@ -8,6 +8,7 @@ import image_utils
 import inception5h
 import tensorflow as tf
 from scipy.ndimage.filters import gaussian_filter
+import time
 
 model   = None
 
@@ -35,10 +36,13 @@ def dream(image_filename, layer):
     }
     """
     global model
+    start_loading = time.time()
     model = inception5h.Inception5h()
     session = tf.compat.v1.Session(graph=model.graph)
 
     image = image_utils.load_image(filename=image_filename)
+
+    start_processing = time.time()
 
     # The image we're going to be working on should be within 400x600 pixels for performance reasons.
     DESIRED_WIDTH = 400
@@ -53,6 +57,10 @@ def dream(image_filename, layer):
     upscaled_result = image_utils.resize_image(image=img_result, size=image.shape)
     image_utils.save_image(upscaled_result, filename='img/deapdream_image.jpg')
     session.close()
+    end_processing = time.time()
+    print("Loading time: %f sec, processing time: %f sec"%(
+        start_processing - start_loading,
+        end_processing - start_processing))
 
 def get_tile_size(num_pixels, tile_size=400):
     """
