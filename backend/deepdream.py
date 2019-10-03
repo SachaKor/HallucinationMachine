@@ -8,6 +8,7 @@ import image_utils
 import inception5h
 import tensorflow as tf
 from scipy.ndimage.filters import gaussian_filter
+import time
 
 model   = None
 
@@ -35,17 +36,31 @@ def dream(image_filename, layer):
     }
     """
     global model
+    start_loading = time.time()
     model = inception5h.Inception5h()
     session = tf.compat.v1.Session(graph=model.graph)
 
     image = image_utils.load_image(filename=image_filename)
+
+    start_processing = time.time()
+
+    # The image we're going to be working on should be within 400x600 pixels for performance reasons.
+    DESIRED_WIDTH = 400
+    DESIRED_HEIGHT = 600
+    rescale_factor = min(DESIRED_WIDTH / image.shape[1], DESIRED_HEIGHT / image.shape[0])
+    image_downscaled = image_utils.resize_image(image=image, factor=rescale_factor)
     layer_tensor = model.get_layer_tensor_by_name(layer['name'])[:,:,:,layer['fromChannel']:layer['toChannel']+1]
     print('Layer tensor: ' + str(layer_tensor))
-    img_result = recursive_optimize(layer_tensor=layer_tensor, image=image,
-                 num_iterations=10, step_size=3.0, rescale_factor=0.7,
+    img_result = recursive_optimize(layer_tensor=layer_tensor, image=image_downscaled,
+                 num_iterations=10, step_size=3.0,
                  num_repeats=4, blend=0.2, session=session)
-    image_utils.save_image(img_result, filename='img/deapdream_image.jpg')
+    upscaled_result = image_utils.resize_image(image=img_result, size=image.shape)
+    image_utils.save_image(upscaled_result, filename='img/deapdream_image.jpg')
     session.close()
+    end_processing = time.time()
+    print("Loading time: %f sec, processing time: %f sec"%(
+        start_processing - start_loading,
+        end_processing - start_processing))
 
 def get_tile_size(num_pixels, tile_size=400):
     """
@@ -215,7 +230,7 @@ def optimize_image(layer_tensor, image,
     return img
 
 def recursive_optimize(layer_tensor, image,
-                       num_repeats=4, rescale_factor=0.7, blend=0.2,
+                       num_repeats=4, blend=0.2,
                        num_iterations=10, step_size=3.0,
                        tile_size=400, session=None):
     """
@@ -244,26 +259,18 @@ def recursive_optimize(layer_tensor, image,
         sigma = 0.5
         img_blur = gaussian_filter(image, sigma=(sigma, sigma, 0.0))
 
-        # Downscale the image.
-        img_downscaled = image_utils.resize_image(image=img_blur,
-                                      factor=rescale_factor)
-
         # Recursive call to this function.
         # Subtract one from num_repeats and use the downscaled image.
         img_result = recursive_optimize(layer_tensor=layer_tensor,
-                                        image=img_downscaled,
+                                        image=img_blur,
                                         num_repeats=num_repeats-1,
-                                        rescale_factor=rescale_factor,
                                         blend=blend,
                                         num_iterations=num_iterations,
                                         step_size=step_size,
                                         tile_size=tile_size, session=session)
 
-        # Upscale the resulting image back to its original size.
-        img_upscaled = image_utils.resize_image(image=img_result, size=image.shape)
-
         # Blend the original and processed images.
-        image = blend * image + (1.0 - blend) * img_upscaled
+        image = blend * image + (1.0 - blend) * img_result
 
     print("Recursive level:", num_repeats)
 
