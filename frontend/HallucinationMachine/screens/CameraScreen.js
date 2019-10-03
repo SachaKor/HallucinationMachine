@@ -28,7 +28,8 @@ class CameraScreen extends React.Component {
     processedImage: null,
     resultSaved: false,
     isFocused: true,
-    dreamButtonDisabled: false
+    dreamButtonDisabled: false,
+    cameraImageSize: null
   };
 
   async componentDidMount() {
@@ -105,6 +106,8 @@ class CameraScreen extends React.Component {
           <Camera
             style={{ flex: 1 }}
             type={this.state.type}
+            pictureSize={this.state.cameraImageSize}
+            onCameraReady={this.setOptimalCameraSize.bind(this)}
             ref={ref => {
               this.camera = ref;
             }}
@@ -197,15 +200,48 @@ class CameraScreen extends React.Component {
     });
   };
 
-  handleCaptureImage = () => {
+  handleCaptureImage = async () => {
     if (this.camera) {
-      this.camera.takePictureAsync({ quality: 0.1 }).then(img =>
-        this.setState({
-          image: img
-        })
-      );
+      const img = await this.camera.takePictureAsync();
+      console.log('Taken picture of size: ' + img.width + 'x' + img.height);
+      this.setState({
+        image: img
+      });
     }
   };
+
+  chooseBetterSize(size1, size2) {
+    // If a size is smaller than min size, choose bigger one.
+    // If both sizes bigger than min size, choose smaller one.
+    const [height1, width1] = size1.split('x').map(x => parseInt(x));
+    const [height2, width2] = size2.split('x').map(x => parseInt(x));
+    const MIN_WIDTH = 400;
+    const MIN_HEIGHT = 600;
+
+    if (
+      height1 >= MIN_HEIGHT &&
+      height2 >= MIN_HEIGHT &&
+      width1 >= MIN_WIDTH &&
+      width2 >= MIN_WIDTH
+    ) {
+      return height1 > height2 ? size2 : size1;
+    }
+    return height1 > height2 ? size1 : size2;
+  }
+
+  async setOptimalCameraSize() {
+    if (this.state.cameraImageSize != null) {
+      return;
+    }
+    const imageSizes = await this.camera.getAvailablePictureSizesAsync('4:3');
+    if (imageSizes.length == 0) {
+      return;
+    }
+    const bestSize = imageSizes.slice(1).reduce(this.chooseBetterSize, imageSizes[0]);
+    console.log('Available image size: ' + JSON.stringify(imageSizes));
+    console.log('Chosen image size: ' + bestSize);
+    this.setState({ cameraImageSize: bestSize });
+  }
 
   handlePickImage = () => {
     ImagePicker.launchImageLibraryAsync({
